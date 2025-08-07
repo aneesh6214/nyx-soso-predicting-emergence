@@ -1,0 +1,217 @@
+<Anticipating Emergent Capabilities Using Sparse Features>
+Instructions
+Proposals must be specific and detailed so the direction of the research is clear. If you’re not sure about a given item, please mark it as such and we can discuss.
+Add text using your assigned color for all tabs in this doc:
+mentor, Olivia, Oskar, Sai, Samantha
+Relevant Past Papers
+The emergence of sparse attention: impact of data distribution and benefits of repetition
+Summary: This paper concentrates on learning dynamics, specifically how transformers learn to focus attention on important parts faster when training is repetitive and emergence timing is dependent on task structure, architecture, and optimizer choice.  
+Limitation: Focuses on small-scale models, analyzes post-hoc results, does not predict emergent behaviors, unclear if “emergence are rooted in longer training, models with higher capacity, or a complex interplay between the two.”
+GROKKING: GENERALIZATION BEYOND OVERFITTING ON SMALL ALGORITHMIC DATASETS 
+Summary: The paper introduces grokking, which is when neural networks suddenly achieves high performance and goes from random generalization to almost perfect generalization. 
+Limitation: Primarily focused on grokking with strong regulators (such as weight decay) and small training sets. Unsure if grokking continues under other conditions.
+Predicting Emergent Capabilities by Finetuning 
+Summary: 
+Motivation - Samantha
+We are still somewhat lacking understanding of emergent capabilities (skills appearing without explicit instructions)
+Emerget capabilities sometimes leads to unexpected behaviors that might be considered harmful if left understood or untamed
+Difficult to predict w/ metrics like loss or accuracy curves
+In interpretability research, this can provide a way to better understand the organization of internal LLMs
+If we can find a way to recognize clear indicators of general or at least certain behaviors, we can potentially predict when or if new behaviors emerge and then their potential impact
+Neuroplasticity in the brain
+Neuroplasticity is the brain’s ability to reorganize itself by forming new neural connections in response to circumstances
+The structure of the brain and neuron connections literally change as the brain learns things and therefore becomes more capable
+Development of Sparse Autoencoders 
+Help disentangle superpositions, therefore giving a way to reliably track evolution of specific features
+Gives a way to define meaningful concepts 
+
+Key Ideas/Contributions/Novelty - Samantha
+Question: Can we use sparse features extracted during training to predict the emergence of new capabilities in transformer models by building co-activation graphs from these sparse features to track their evolution?
+Bridge between mechanistic interpretability and predictive modeling
+We use changes in sparse internal features to make co-activation patterns and check patterns at different training checkpoints to look for signals of emergent capabilities 
+Model internal dynamics w/co-activation graphs
+May reveal early-warning signals
+We propose a framework for potentially tracking emergent capabilities by interpreting sparse features
+May come up with empirical evidence that indicate performance shifts
+Potential indicator for structural signs of capability emergence
+Predictive use of spare features (pre-hoc) where previous works examined post-hoc, which focused on conclusions based on results 
+Methods - Oskar
+How does your idea work? Describe the way you will get your results from the initial step. Make a diagram. 
+Training and Accessing Transformer Checkpoints
+We train a transformer model from scratch with known emergent behavior (modular arithmetic, indirect object identification, in-context learning, etc.). At regular intervals (ex. every x number of steps), we save full model checkpoints to capture the evolving internal representations.
+Sparse Feature Extraction via Dictionary Learning
+At each of the checkpoints during training, we extract activations from a specific hidden layer. Then we apply sparse dictionary learning or sparse autoencoders to learn a sparse basis of feature directions. Each input is encoded as a sparse vector over this learned dictionary, where each nonzero entry corresponds to the activation of an interpretable feature
+Constructing Co-Activation Graphs
+From the sparse vectors extracted, we can construct a co-activation graph containing:
+Nodes (sparse features) representing a possible concept or direction in the activation space.
+Edges are equivalent to how often two features are active together and are weighted by a co-activation score (computed as the normalized frequency with which two features are activated on the same input).
+A threshold to ensure that only meaningful connections are retained
+Each training checkpoint will produce one such co-activation graph, resulting in a time series of graphs that track feature connectivity over the training process (over time)
+Tracking Graph Evolution
+We analyze structural changes in the graphs over time using:
+Graph density measures how many edges exist in the graph compared to how many could exist. This helps us track the connectivity of features and a sudden spike in density, meaning multiple features collaborating, could be indicative of the emergence of a new skill.
+Clustering coefficients measure how tightly a grouped node’s neighbors are. When features start forming tight local groups, with a high clustering coefficient, this could indicate that a meaningful circuit is forming and/or the emergence of a new skill.
+Emergent subgraph detection to detect when subgraphs (a small group of nodes and edges within the larger graph) appear or strengthen rapidly. This helps us detect when a circuit is formed and/or a new skill is learned
+Node Degree Centrality scores nodes on how co-active a node is with other nodes. High-degree nodes are more central to the network, meaning they are more frequently co-active with many other nodes. We will also compute the weighted degree (measuring how strong the connections are, not just the quantity). By checking for changes in node degree centrality, we may find that emergence could arise from a high-degree node or a few high-degree nodes becoming the backbone of a new subgraph or capability.
+Community detection to find groups of nodes that are densely connected to each other but not so much to the rest of the graph. While subgraph detection focuses on finding specific functional structures, community detection attempts to identify modular structures. A new community forming could indicate a new behavior forming.
+We hypothesize that the emergence of new capabilities correlates with:
+The sudden appearance of new nodes
+Rapid increases in subgraph cohesion
+Shifts in centrality of previously inactive features
+Alignment With Emergent Capabilities
+In parallel to training, we will evaluate the model’s accuracy on a test set at each checkpoint. We will align jumps in capability (accuracy) with changes in the co-activation graphs to determine whether the graph topology predicts or lags behind behavioral emergence. Additionally, we will take the sparse features learned during training and test whether each one encodes something interpretable (ex. math, grammar, etc.) by using linear probes to try and predict those concepts directly from the sparse codes.
+Experimental Setup - Oskar
+
+How are you going to test your idea to prove that it works?
+Think about social science experiments where researchers have a plan of what to make participants do, what to ask them and how to calculate results based on the responses.
+What are your baselines for comparison? i.e control group
+What models? What datasets? What metrics (if not accuracy)?
+
+What additional analysis do you plan on doing?
+How are you going to prove that any improvements in the system are because of your idea alone, i.e. reduce confounding factors and do ablation testing
+How does your idea impact the system? What metrics are you quantifying with? 
+Visualizations? Statistics?
+The core hypothesis is that emergent capabilities in transformer models are preceded by detectable structural changes in the co-activation graphs of sparse features. In order to test this, we will:
+Train a transformer model from scratch on tasks with known emergent behavior (modular arithmetic, IOI, induction, WMDP)
+At regular training intervals (ex. Every 1,000 steps):
+Save a model checkpoint
+Extract sparse features from hidden activations using sparse dictionary learning
+Construct co-activation graphs from the sparse codes
+Compute structural graph metrics
+Evaluate model performance on a test set
+Compare the timing and trajectory of graph changes with performance jumps
+If graph structure changes precede or align with emergence, this supports our hypothesis
+Baselines (control groups) → see below (Sai’s work)
+Training curve only (no internals)
+Only track model accuracy over time. This helps test whether structural internal changes offer earlier or clearer emergence signals than performance alone.
+Dense feature graphs (no sparsity)
+Use raw hidden activations to build co-activation graphs without sparse dictionary learning. This helps test whether sparse features improve interpretability and signal quality.
+Attention pattern tracking
+Monitor changes in attention head patterns. This serves as a benchmark from prior interpretability literature.
+Random sparse features (control)
+Generate sparse codes with randomized dictionaries and/or shuffled weights. This acts as a control for whether the observed structure is real or fake.
+Models
+GPT-2 architecture transformer trained from scratch
+Dataset
+Fineweb dataset
+Datasets and metrics → see below (Olivia + Sai’s work)
+Additional analysis
+Alignment with emergent behavior
+Overlay performance curves and graph metric curves to see if structural changes precede, coincide with, or lag behind behavioral jumps
+Feature interpretability probing
+Use linear probes to test if specific sparse features encode interpretable concepts
+Statistical significance testing
+Run significance tests on differences in graph metrics across emergence and non-emergence periods
+Ablation testing
+Remove top-degree nodes, subgraphs, or communities from sparse features and observe whether model performance drops. This helps us understand their role in the capability of the model.
+Proving improvements
+Compare against control groups
+Isolate one change at a time
+Generalize tasks and datasets to ensure results aren’t task specific
+Impact on system (if successful)
+Provides tools for early and interpretable prediction of emergence
+Emergence predictability → correlation between graph metric spikes and future accuracy jumps
+Interpretability → probing sparse features for alignment with known concepts
+Structural insight → graph visualizations and evolution over the course of the training process
+Diagnostic power → ability to detect instability, capability onset, and failure modes
+Datasets and Evaluation - Olivia
+Using a mix of existing benchmark datasets and synthetic datasets designed for controlled emergence analysis
+WMDP (Weapons of Mass Destruction Proxy) datasets on topics known to get sharp capability transitions in safety related fields
+In addition, we will be using synthetic datasets designed specifically to test 
+Metrics for evaluation will be divided into two categories
+Task performance: How does the accuracy of the model change over time? Does the emergence of new features lead to a decrease in accuracy? At what point?
+F1 score
+Sparse feature & emergence metrics: when and how these capabilities emerge
+Co-activation graphs (
+Tracking changes and patterns over time
+The transformer model will be evaluated at different checkpoints to evaluate internal representations
+Which datasets are you going to use to evaluate your method? Or, are you creating your own?
+Reference relevant previous papers here.
+If you’re training, what dataset will you use for that?
+What is the evaluation metric(s)? 
+Some tasks are straightforward to measure (e.g accuracy, for mathematical reasoning). Some are much harder (e.g LLM persuasive ability - think about how you would do this).
+Benchmarks/Evaluation Sets - Sai
+Evaluation and comparison with existing systems.
+What are your baselines? 
+To Evaluate weather sparse features and their co- activation graphs can be used to predict the emergence of new capabilities in transformer models, we will use a mix of synthetic tasks, interpretable benchmarks, and real world problems.
+Our goal is to track whether internal structural changes - captured through sparse feature co -activation graphs - occur before, during, or after these emergent behaviors become visible.
+
+	Evaluation Tasks & Datasets
+1) Modular Arithmetic (Synthetic Task)
+Simple mathematical tasks like addition modulo 3 or 5 are known to produce sharp transitions in performance 
+Evaluation Metric : Accuracy on held - out modular arithmetic problems at each checkpoint
+Goal: Detect the appearance of new sparse features or graph structures that constantly emerge before accuracy spikes
+2) Indirect Object Identification (IOI)
+Based on mechanistic interpretability work, IOI tasks test the models ability to resolve pronoun references in sentences
+Evaluation Metric : Binary accuracy (correct/incorrect pronoun resolution)
+Goal: Observe the emergence of specific sparse features linked to pronoun tracking circuits
+3) In - Context Learning (Induction Heads)
+This task evaluates the models ability to replicate patterns from prompt inputs, a kown behavior in transformers.
+Evaluation Metric: Token- level accuracy on completing patterns from the prompt
+Goal: Determine whether increasing subgraph density or connectivity precedes the emergence of induction head behavior.
+4) WMDP Dataset (Weapons of Mass Destruction Proxy)
+This dataset includes tasks across cyber, biosecurity, and other domains.
+Evaluation Metric: Task- Specific ( classification accuracy, factual correctness)
+Goal: Test whether the use of sparse feature emergence is consistent across sensitive and specialized domains.
+
+Baselines
+1)Training Curve Only (Performance Baseline)
+Track model accuracy at each training checkpoint without looking at internal activations
+Helps determine if our method can predict emergence earlier than performance.
+2)Dense Feature Correlation (No Sparsity)
+Correlate dense hidden layer activations directly without applying sparse dictionary learning
+Tests whether sparse representation adds clarity or predictive signal beyond the activations
+3) Attention Pattern Analysis
+tracks how attention heads evolve over time
+Provides a widely-used benchmark for identifying when certain reasoning behaviors emerge
+ 4) Random Sparse Features (Control)
+Apply learning with randomized weights to control for the structural effects of sparsity
+Ensures graph metrics are capturing meaningful signal, not random co-activation
+
+Ideal Results - Sai
+What’s the best case scenario/what do you hope to demonstrate?
+What is your hypothesis? What results would prove it to be true?
+Our central hypothesis is that emergent capabilities in transformer models are preceded by identifiable internal structural changes, specifically reflected in the evolution of sparse features and their co-activation graphs. aim to demonstrate that it is possible not only to observe these changes after , but also to anticipate when a new capability is about to emerge  before it becomes visible in model performance.If successful, our method would offer a novel tool for mechanistically understanding model behavior and forecasting the reasoning. This could have significant implications for AI interpretability.
+BEST CASE OUTCOMES
+1)Predictive Graph Signatures
+Co- activation graph metrics exhibit sharp shifts before performance jumps, (node degree centrality, graph density)
+These shifts occur across multiple tasks( modular arithmetic, IOI, in context learning) suggesting a general signature of emergent capabilities
+Emergent capabilities can be anticipated several training steps in advance based on graphs alone.
+2)Emergence of New Sparse Features
+New sparse features( dictionary atoms) appear or become highly activated right before the model learns a new  behavior
+These features are part of highly connected subgraphs or communities that appear and stabilize once the behavior becomes consistent.
+3)Robustness across architecture and datasets 
+The predictive value of sparse feature co- activation graphs holds across different architectures, and dataset types.
+We begin to identify possible “emergence laws”- general rules that govern when and how capabilities arise.
+4)Causal signals via Suppression tests
+If specific sparse features or subgraphs are suppressed just before an expected emergence point, the capability fails to materialize or is significantly delayed.
+This provides causal evidence that the identified features are not just correlated with, but huge in producing the new behavior.
+5)Lightweight Predictive Model
+A simple ML classifier or statistical model trained on co-activation graph statistics can forecast upcoming capability jumps.
+This enables real-time interpretability tools during training to flag upcoming phase transitions.
+Results
+A new interpretability method that transforms internal activations into co - activation graphs, and tracks their evolution
+The first evidence that sparse, interpretable features offer early predictive signals for emergent model behavior
+A step toward mechanistically grounded forecasting of capabilities - valuable for AI safety and governance
+A novel benchmark for comparing emergent behavior prediction techniques, including our graph-based approach and baselines
+Potential Limitations - Olivia
+Limited compute and model scale
+Lack of access to specialized hardware means we are restricted to training small scale transformer models. As a result, emergent capabilities may be simpler or less abrupt than those seen in large-scale language models. This limits the generalizability of our findings to production-scale systems
+Ambiguity
+Emergent capabilities may not have a clear onset. Instead, they often develop gradually or intermittently, making it difficult to precisely align graph-based signals with performance-based jumps. This makes it difficult to predict results
+Computation limits, generalization limits, dataset limits, ethical limits?
+
+Summary:
+Our central hypothesis is that emergent capabilities in transformer models are preceded by identifiable internal structural changes, specifically reflected in the evolution of sparse features and their co-activation graphs. We aim to demonstrate that it is possible not only to observe these changes after, but also to anticipate when a new capability is about to emerge before it becomes visible in model performance. If successful, our method would offer a novel tool for mechanistically understanding model behavior and forecasting the reasoning. Significant implications for AI interpretability include a new interpretability method that transforms internal activations into co-activation graphs, and tracks their evolution and the first evidence that sparse, interpretable features offer early predictive signals for emergent model behavior 
+We will train a small GPT-2 architecture transformer from scratch on the FineWeb dataset (which provides a diverse and realistic text distribution). This is an estimated $50-100 training cost. At regular training checkpoints, we will extract hidden layer activations and apply sparse dictionary learning to generate sparse feature representations. These sparse features will then be used to construct co-activation graphs (nodes will represent features and edges represent how often they co-activate). By analyzing how the structure of these graphs evolve over training/time, we aim to identify signals (such as changes in density, community structure, centrality, etc.) that precede or coincide with emergent capabilities.
+What we need help on: 	
+How should we benchmark emergent capabilities?
+Could we look for specific emergent capabilities (like modular arithmetic, indirect object identification, etc.) and see how the model performs on these tasks?
+We would be looking for a nonlinear jump in performance on a specific task essentially (like the model failing to it suddenly “getting it”)
+Clarification on our proposal
+How can we refine our ideas? 
+Is this idea worth pursuing in terms of feasible and measurable outcomes?
+Does the implementation of this make sense?
+Do you see any issues with the choice of dataset and transformer architecture?
+Do you think better or more unique results could be found using a different method? 
+How many parameters is enough?
