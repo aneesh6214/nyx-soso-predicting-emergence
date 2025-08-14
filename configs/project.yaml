@@ -1,0 +1,12 @@
+model_hf_id: "eleutherai/pythia-6.9b-deduped"
+steps: ["step000000", "step080000", "step140000"]
+activation:
+  layer: 20
+  tokens: 5000000
+  max_len: 512
+  batch: 8
+sae:
+  k: 8192
+  alpha: 1.0
+graph:
+  corr_threshold: 0.10
