@@ -1,0 +1,6 @@
+tasks: ["mmlu", "hella_swag", "arc_easy", "arc_challenge", "winogrande", "gsm8k"]
+batch_size: 32
+decoding:
+  model: "vllm"
+  dtype: "bf16"
+  tensor_parallel_size: 1
