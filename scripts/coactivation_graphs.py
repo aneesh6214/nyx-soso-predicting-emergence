@@ -21,6 +21,9 @@ import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
 
+# Import SparseAutoencoder from train_sae.py
+from train_sae import SparseAutoencoder
+
 
 class CoActivationAnalyzer:
     """Analyze co-activation patterns in SAE features."""
