@@ -157,10 +157,26 @@ class CoActivationAnalyzer:
         if self.graph is None:
             raise ValueError("Must build graph first")
         
-        print(f"Clustering features using {method}...")
+        num_nodes = self.graph.number_of_nodes()
+        if num_nodes == 0:
+            raise ValueError("Co-activation graph has 0 nodes after filtering; try lowering the threshold.")
+        if num_nodes < 2:
+            print("[WARN] Graph has <2 nodes; skipping clustering.")
+            self.feature_clusters = {0: list(self.graph.nodes())}
+            return self.feature_clusters
+        
+        print(f"Clustering features using {method}... (nodes={num_nodes})")
         
         # Get adjacency matrix
         adj_matrix = nx.adjacency_matrix(self.graph).toarray()
+        
+        # If requested clusters exceed nodes, reduce automatically
+        if n_clusters > num_nodes:
+            print(f"[WARN] n_clusters={n_clusters} > nodes={num_nodes}. Using n_clusters={num_nodes}.")
+            n_clusters = num_nodes
+        if method == "spectral" and n_clusters < 2:
+            print("[WARN] spectral clustering needs at least 2 clusters; falling back to DBSCAN.")
+            method = "dbscan"
         
         if method == "spectral":
             clustering = SpectralClustering(
@@ -184,18 +200,16 @@ class CoActivationAnalyzer:
         # Group features by cluster
         clusters = {}
         for feature_idx, cluster_id in enumerate(cluster_labels):
-            if cluster_id not in clusters:
-                clusters[cluster_id] = []
-            clusters[cluster_id].append(feature_idx)
+            clusters.setdefault(int(cluster_id), []).append(feature_idx)
         
-        # Filter out small clusters
+        # Filter out small clusters (keep noise cluster -1 separate)
         filtered_clusters = {
-            cluster_id: features
-            for cluster_id, features in clusters.items()
-            if len(features) >= min_cluster_size
+            cid: feats
+            for cid, feats in clusters.items()
+            if (cid == -1) or (len(feats) >= min_cluster_size)
         }
         
-        print(f"Found {len(filtered_clusters)} clusters")
+        print(f"Found {len(filtered_clusters)} clusters (including noise if any)")
         for cluster_id, features in filtered_clusters.items():
             print(f"  Cluster {cluster_id}: {len(features)} features")
         
