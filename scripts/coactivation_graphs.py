@@ -20,6 +20,7 @@ from sklearn.metrics import silhouette_score
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
+from tqdm import tqdm
 
 # Import SparseAutoencoder from train_sae.py
 from train_sae import SparseAutoencoder
@@ -72,6 +73,13 @@ class CoActivationAnalyzer:
                 # Flatten to match SAE input dim used during training
                 if batch.dim() > 2:
                     batch = batch.view(batch.size(0), -1)
+                # Defensive check: ensure dims match SAE input
+                expected_dim = getattr(self.sae_model, "input_dim", None)
+                if expected_dim is not None and batch.size(1) != expected_dim:
+                    raise ValueError(
+                        f"Activation dim mismatch: got {batch.size(1)}, expected {expected_dim}. "
+                        f"Ensure train_sae.py flattened activations the same way before training."
+                    )
                 _, features = self.sae_model(batch)
                 all_features.append(features.cpu())
             
