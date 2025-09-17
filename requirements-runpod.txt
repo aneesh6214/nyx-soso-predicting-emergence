@@ -1,13 +1,13 @@
 
+# Core ML dependencies
 transformers==4.45.1
 peft==0.13.2
 accelerate==0.34.2
 huggingface_hub==0.24.6
-
-vllm==0.5.3          
-lm-eval==0.4.2  
-
+lm-eval==0.4.2
 datasets==2.20.0
+
+# Basic dependencies
 sentencepiece
 numpy
 scipy
@@ -17,3 +17,14 @@ networkx
 matplotlib
 einops
 pyyaml
+
+# Mechanistic interpretability dependencies
+transformer-lens
+torch-geometric
+plotly
+seaborn
+tqdm
+wandb
+
+# vLLM (install separately to avoid conflicts)
+# vllm==0.5.3
