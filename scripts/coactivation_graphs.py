@@ -69,6 +69,9 @@ class CoActivationAnalyzer:
             
             for i in range(0, len(activations), batch_size):
                 batch = activations[i:i + batch_size].to(self.device)
+                # Flatten to match SAE input dim used during training
+                if batch.dim() > 2:
+                    batch = batch.view(batch.size(0), -1)
                 _, features = self.sae_model(batch)
                 all_features.append(features.cpu())
             
