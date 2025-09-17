@@ -109,7 +109,8 @@ class SAETrainer:
         num_batches = 0
         
         for batch in tqdm(dataloader, desc="Training epoch"):
-            batch = batch.to(self.device)
+            # TensorDataset returns tuples, extract the tensor
+            batch = batch[0].to(self.device)
             
             # Forward pass
             reconstructed, hidden = self.model(batch)
