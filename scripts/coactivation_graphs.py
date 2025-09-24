@@ -58,7 +58,7 @@ class CoActivationAnalyzer:
     def compute_coactivation_matrix(
         self,
         activations: torch.Tensor,
-        threshold: float = 0.1,
+        threshold: float = 0.01,
         batch_size: int = 1000
     ) -> np.ndarray:
         """Compute co-activation matrix between SAE features."""
