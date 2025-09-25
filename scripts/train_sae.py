@@ -4,6 +4,7 @@ Train Sparse Autoencoder (SAE) on neural activations for mechanistic interpretab
 
 Usage:
   python scripts/train_sae.py --activations data/activations/activations.pt --features 8192 --sparsity 0.1
+  python scripts/train_sae.py --activations data/activations/activations.pt --resume_from data/sae/checkpoint_epoch_800.pt
 """
 
 import argparse
@@ -153,10 +154,11 @@ class SAETrainer:
         dataloader: torch.utils.data.DataLoader,
         num_epochs: int,
         save_dir: Path,
-        log_to_wandb: bool = False
+        log_to_wandb: bool = False,
+        start_epoch: int = 0
     ):
         """Train the SAE."""
-        print(f"Training SAE for {num_epochs} epochs...")
+        print(f"Training SAE for {num_epochs} epochs starting from epoch {start_epoch}...")
         
         if log_to_wandb:
             wandb.init(
@@ -166,13 +168,14 @@ class SAETrainer:
                     "hidden_dim": self.model.hidden_dim,
                     "sparsity_penalty": self.sparsity_penalty,
                     "learning_rate": self.optimizer.param_groups[0]['lr'],
-                    "num_epochs": num_epochs
+                    "num_epochs": num_epochs,
+                    "start_epoch": start_epoch
                 }
             )
         
         best_loss = float('inf')
         
-        for epoch in range(num_epochs):
+        for epoch in range(start_epoch, num_epochs):
             # Train epoch
             metrics = self.train_epoch(dataloader)
             
@@ -225,10 +228,36 @@ class SAETrainer:
             "hidden_dim": self.model.hidden_dim
         }, path)
     
+    def load_model(self, path: Path):
+        """Load model state from checkpoint."""
+        print(f"Loading checkpoint from: {path}")
+        checkpoint = torch.load(path, map_location=self.device)
+        
+        # Load model state
+        self.model.load_state_dict(checkpoint["model_state_dict"])
+        
+        # Load optimizer state
+        self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+        
+        # Load scheduler state
+        self.scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
+        
+        print("✅ Checkpoint loaded successfully!")
+        return checkpoint
+    
     def save_history(self, path: Path):
         """Save training history."""
         with open(path, "w") as f:
             json.dump(self.history, f, indent=2)
+    
+    def load_history(self, path: Path):
+        """Load training history."""
+        if path.exists():
+            with open(path, "r") as f:
+                self.history = json.load(f)
+            print(f"✅ Training history loaded from: {path}")
+        else:
+            print(f"⚠️  No training history found at: {path}")
     
     def plot_training_curves(self, path: Path):
         """Plot training curves."""
@@ -299,6 +328,7 @@ def main():
     parser.add_argument("--lr", type=float, default=1e-3, help="Learning rate (default: 1e-3)")
     parser.add_argument("--output", default="data/sae", help="Output directory (default: data/sae)")
     parser.add_argument("--wandb", action="store_true", help="Log to Weights & Biases")
+    parser.add_argument("--resume_from", help="Path to checkpoint file to resume from")
     
     args = parser.parse_args()
     
@@ -324,6 +354,26 @@ def main():
         sparsity_penalty=args.sparsity
     )
     
+    # Handle resume from checkpoint
+    start_epoch = 0
+    if args.resume_from:
+        checkpoint_path = Path(args.resume_from)
+        if not checkpoint_path.exists():
+            print(f"❌ Checkpoint file not found: {checkpoint_path}")
+            return
+        
+        # Load checkpoint
+        checkpoint = trainer.load_model(checkpoint_path)
+        
+        # Extract epoch number from checkpoint filename
+        if "checkpoint_epoch_" in checkpoint_path.name:
+            start_epoch = int(checkpoint_path.name.split("_")[-1].split(".")[0]) + 1
+            print(f"Resuming from epoch {start_epoch}")
+        
+        # Load training history if it exists
+        history_path = output_dir / "training_history.json"
+        trainer.load_history(history_path)
+    
     # Create dataloader
     dataloader = create_dataloader(activations, args.batch_size)
     
@@ -332,7 +382,8 @@ def main():
         dataloader=dataloader,
         num_epochs=args.epochs,
         save_dir=output_dir,
-        log_to_wandb=args.wandb
+        log_to_wandb=args.wandb,
+        start_epoch=start_epoch
     )
     
     print(f"✅ SAE training complete! Results saved to: {output_dir}")
