@@ -90,6 +90,11 @@ class CoActivationAnalyzer:
             # Compute co-activation matrix
             # P(feature_i | feature_j) = P(feature_i AND feature_j) / P(feature_j)
             num_features = features.shape[1]
+            if threshold is not None and hasattr(self, 'max_features') and self.max_features is not None:
+                num_features = min(num_features, self.max_features)
+                features = features[:, :num_features]
+                print(f"Using top {num_features} features for co-activation analysis")
+            
             coactivation_matrix = np.zeros((num_features, num_features))
             
             # Compute pairwise co-activations
@@ -400,6 +405,7 @@ def main():
     parser.add_argument("--activations", required=True, help="Path to activations.pt file")
     parser.add_argument("--threshold", type=float, default=0.1, help="Co-activation threshold (default: 0.1)")
     parser.add_argument("--n_clusters", type=int, default=10, help="Number of clusters (default: 10)")
+    parser.add_argument("--max_features", type=int, default=None, help="Maximum number of features to analyze (default: all)")
     parser.add_argument("--output", default="data/coactivation_analysis", help="Output directory")
     
     args = parser.parse_args()
@@ -414,6 +420,10 @@ def main():
     
     # Create analyzer
     analyzer = CoActivationAnalyzer(Path(args.sae_model))
+    
+    # Set max features if specified
+    if args.max_features is not None:
+        analyzer.max_features = args.max_features
     
     # Compute co-activation matrix
     analyzer.compute_coactivation_matrix(activations)
