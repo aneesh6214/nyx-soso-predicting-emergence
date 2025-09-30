@@ -59,9 +59,21 @@ class CoActivationAnalyzer:
         self,
         activations: torch.Tensor,
         threshold: float = 0.01,
-        batch_size: int = 1000
+        batch_size: int = 1000,
+        output_dir: Path = None
     ) -> np.ndarray:
         """Compute co-activation matrix between SAE features."""
+        # Check if matrix already exists
+        if output_dir is not None:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            matrix_path = output_dir / "coactivation_matrix.npy"
+            
+            if matrix_path.exists():
+                print(f"Loading existing co-activation matrix from: {matrix_path}")
+                coactivation_matrix = np.load(matrix_path)
+                print("✅ Co-activation matrix loaded successfully!")
+                return coactivation_matrix
+        
         print("Computing co-activation matrix...")
         
         with torch.no_grad():
@@ -114,6 +126,12 @@ class CoActivationAnalyzer:
                             coactivation_matrix[i, j] = (p_joint / p_j).item()
             
             self.coactivation_matrix = coactivation_matrix
+            
+            # Save the computed matrix
+            if output_dir is not None:
+                np.save(matrix_path, coactivation_matrix)
+                print(f"✅ Co-activation matrix saved to: {matrix_path}")
+            
             return coactivation_matrix
     
     def build_coactivation_graph(
@@ -426,7 +444,7 @@ def main():
         analyzer.max_features = args.max_features
     
     # Compute co-activation matrix
-    analyzer.compute_coactivation_matrix(activations)
+    analyzer.compute_coactivation_matrix(activations, output_dir=output_dir)
     
     # Build graph
     analyzer.build_coactivation_graph(threshold=args.threshold)
