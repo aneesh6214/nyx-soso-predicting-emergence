@@ -100,6 +100,14 @@ class CoActivationAnalyzer:
             features = torch.cat(all_features, dim=0)
             print(f"SAE features shape: {features.shape}")
             
+            # Debug: Check feature activation statistics
+            print(f"Features min: {features.min().item():.6f}")
+            print(f"Features max: {features.max().item():.6f}")
+            print(f"Features mean: {features.mean().item():.6f}")
+            print(f"Non-zero features: {torch.count_nonzero(features).item()}")
+            print(f"Features > 0: {torch.count_nonzero(features > 0).item()}")
+            print(f"Features > 0.1: {torch.count_nonzero(features > 0.1).item()}")
+            
             # Compute co-activation matrix
             # P(feature_i | feature_j) = P(feature_i AND feature_j) / P(feature_j)
             num_features = features.shape[1]
