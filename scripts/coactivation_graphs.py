@@ -146,6 +146,17 @@ class CoActivationAnalyzer:
         
         print(f"Building co-activation graph with threshold {threshold}...")
         
+        # Debug: Check matrix statistics
+        matrix = self.coactivation_matrix
+        print(f"Matrix shape: {matrix.shape}")
+        print(f"Matrix min: {matrix.min():.6f}")
+        print(f"Matrix max: {matrix.max():.6f}")
+        print(f"Matrix mean: {matrix.mean():.6f}")
+        print(f"Non-zero values: {np.count_nonzero(matrix)}")
+        print(f"Values > 0.001: {np.count_nonzero(matrix > 0.001)}")
+        print(f"Values > 0.01: {np.count_nonzero(matrix > 0.01)}")
+        print(f"Values > 0.1: {np.count_nonzero(matrix > 0.1)}")
+        
         G = nx.Graph()
         
         # Add nodes (SAE features)
