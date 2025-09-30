@@ -71,6 +71,7 @@ class CoActivationAnalyzer:
             if matrix_path.exists():
                 print(f"Loading existing co-activation matrix from: {matrix_path}")
                 coactivation_matrix = np.load(matrix_path)
+                self.coactivation_matrix = coactivation_matrix
                 print("✅ Co-activation matrix loaded successfully!")
                 return coactivation_matrix
         
