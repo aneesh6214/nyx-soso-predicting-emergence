@@ -116,6 +116,20 @@ class CoActivationAnalyzer:
             # Debug: Check if features are actually binary (0 or >0)
             print(f"Unique values in first feature: {torch.unique(features[:, 0])[:10]}")
             
+            # Debug: Check which samples have non-zero features
+            non_zero_samples = torch.any(features > 0, dim=1)
+            print(f"Samples with non-zero features: {torch.sum(non_zero_samples).item()}/{features.shape[0]}")
+            if torch.sum(non_zero_samples) > 0:
+                first_non_zero = torch.where(non_zero_samples)[0][0]
+                print(f"First non-zero sample: {first_non_zero}")
+                print(f"Features in sample {first_non_zero}: {features[first_non_zero, :10].tolist()}")
+            
+            # Debug: Check input activations
+            print(f"Input activations shape: {activations.shape}")
+            print(f"Input activations min: {activations.min().item():.6f}")
+            print(f"Input activations max: {activations.max().item():.6f}")
+            print(f"Input activations mean: {activations.mean().item():.6f}")
+            
             # Compute co-activation matrix
             # P(feature_i | feature_j) = P(feature_i AND feature_j) / P(feature_j)
             num_features = features.shape[1]
