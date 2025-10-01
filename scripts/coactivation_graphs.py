@@ -167,13 +167,21 @@ class CoActivationAnalyzer:
                         std_i = torch.std(feature_i)
                         std_j = torch.std(feature_j)
                         
+                        # Debug: Print some values to see what's happening
+                        if i < 3 and j < 3:  # Only for first few pairs
+                            print(f"Features {i},{j}: std_i={std_i:.6f}, std_j={std_j:.6f}")
+                        
                         if std_i > 1e-8 and std_j > 1e-8:
                             correlation = torch.mean((feature_i - mean_i) * (feature_j - mean_j)) / (std_i * std_j)
                             coactivation_matrix[i, j] = correlation.item()
-                        
-                        # Debug: Print some values to see what's happening
-                        if i < 3 and j < 3:  # Only for first few pairs
-                            print(f"Features {i},{j}: corr={coactivation_matrix[i, j]:.6f}, std_i={std_i:.6f}, std_j={std_j:.6f}")
+                            # Debug: Print correlation for first few pairs
+                            if i < 3 and j < 3:
+                                print(f"Features {i},{j}: corr={correlation.item():.6f}")
+                        else:
+                            # Set correlation to 0 for features with zero variance
+                            coactivation_matrix[i, j] = 0.0
+                            if i < 3 and j < 3:
+                                print(f"Features {i},{j}: corr=0.0 (zero variance)")
             
             self.coactivation_matrix = coactivation_matrix
             
