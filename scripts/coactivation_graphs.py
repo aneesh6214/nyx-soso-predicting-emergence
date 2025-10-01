@@ -126,25 +126,31 @@ class CoActivationAnalyzer:
             
             coactivation_matrix = np.zeros((num_features, num_features))
             
-            # Compute pairwise co-activations
+            # Compute pairwise co-activations using correlation
             for i in tqdm(range(num_features), desc="Computing co-activations"):
                 for j in range(num_features):
                     if i != j:
-                        # Features are active when > 0
-                        feature_i_active = (features[:, i] > 0).float()
-                        feature_j_active = (features[:, j] > 0).float()
+                        # Use correlation instead of conditional probability
+                        # This works better with sparse SAE features
+                        feature_i = features[:, i]
+                        feature_j = features[:, j]
                         
-                        # P(feature_i | feature_j)
-                        joint_active = feature_i_active * feature_j_active
-                        p_joint = torch.mean(joint_active)
-                        p_j = torch.mean(feature_j_active)
+                        # Compute Pearson correlation
+                        # corr = E[(X-μX)(Y-μY)] / (σX * σY)
+                        mean_i = torch.mean(feature_i)
+                        mean_j = torch.mean(feature_j)
+                        
+                        # Avoid division by zero
+                        std_i = torch.std(feature_i)
+                        std_j = torch.std(feature_j)
+                        
+                        if std_i > 1e-8 and std_j > 1e-8:
+                            correlation = torch.mean((feature_i - mean_i) * (feature_j - mean_j)) / (std_i * std_j)
+                            coactivation_matrix[i, j] = correlation.item()
                         
                         # Debug: Print some values to see what's happening
                         if i < 3 and j < 3:  # Only for first few pairs
-                            print(f"Features {i},{j}: p_joint={p_joint:.6f}, p_j={p_j:.6f}")
-                        
-                        if p_j > 1e-8:  # Use a small threshold instead of 0
-                            coactivation_matrix[i, j] = (p_joint / p_j).item()
+                            print(f"Features {i},{j}: corr={coactivation_matrix[i, j]:.6f}, std_i={std_i:.6f}, std_j={std_j:.6f}")
             
             self.coactivation_matrix = coactivation_matrix
             
