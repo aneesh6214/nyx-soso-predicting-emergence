@@ -131,7 +131,11 @@ class CoActivationAnalyzer:
                         p_joint = torch.mean(joint_active)
                         p_j = torch.mean(feature_j_active)
                         
-                        if p_j > 0:
+                        # Debug: Print some values to see what's happening
+                        if i < 3 and j < 3:  # Only for first few pairs
+                            print(f"Features {i},{j}: p_joint={p_joint:.6f}, p_j={p_j:.6f}")
+                        
+                        if p_j > 1e-8:  # Use a small threshold instead of 0
                             coactivation_matrix[i, j] = (p_joint / p_j).item()
             
             self.coactivation_matrix = coactivation_matrix
