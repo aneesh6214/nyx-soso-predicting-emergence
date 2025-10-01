@@ -78,27 +78,36 @@ class CoActivationAnalyzer:
         print("Computing co-activation matrix...")
         
         with torch.no_grad():
-            # Get SAE features for all activations
-            all_features = []
-            
-            for i in range(0, len(activations), batch_size):
-                batch = activations[i:i + batch_size].to(self.device)
-                # Flatten to match SAE input dim used during training
-                if batch.dim() > 2:
-                    batch = batch.view(batch.size(0), -1)
-                # Defensive check: ensure dims match SAE input
-                expected_dim = getattr(self.sae_model, "input_dim", None)
-                if expected_dim is not None and batch.size(1) != expected_dim:
-                    raise ValueError(
-                        f"Activation dim mismatch: got {batch.size(1)}, expected {expected_dim}. "
-                        f"Ensure train_sae.py flattened activations the same way before training."
-                    )
-                _, features = self.sae_model(batch)
-                all_features.append(features.cpu())
-            
-            # Concatenate all features
-            features = torch.cat(all_features, dim=0)
-            print(f"SAE features shape: {features.shape}")
+            if hasattr(self, 'use_original_activations') and self.use_original_activations:
+                # Use original activations directly
+                print("Using original activations instead of SAE features")
+                features = activations.to(self.device)
+                # Flatten to 2D if needed
+                if features.dim() > 2:
+                    features = features.view(features.size(0), -1)
+                features = features.cpu()
+            else:
+                # Get SAE features for all activations
+                all_features = []
+                
+                for i in range(0, len(activations), batch_size):
+                    batch = activations[i:i + batch_size].to(self.device)
+                    # Flatten to match SAE input dim used during training
+                    if batch.dim() > 2:
+                        batch = batch.view(batch.size(0), -1)
+                    # Defensive check: ensure dims match SAE input
+                    expected_dim = getattr(self.sae_model, "input_dim", None)
+                    if expected_dim is not None and batch.size(1) != expected_dim:
+                        raise ValueError(
+                            f"Activation dim mismatch: got {batch.size(1)}, expected {expected_dim}. "
+                            f"Ensure train_sae.py flattened activations the same way before training."
+                        )
+                    _, features = self.sae_model(batch)
+                    all_features.append(features.cpu())
+                
+                # Concatenate all features
+                features = torch.cat(all_features, dim=0)
+            print(f"Features shape: {features.shape}")
             
             # Debug: Check feature activation statistics
             print(f"Features min: {features.min().item():.6f}")
@@ -476,6 +485,7 @@ def main():
     parser.add_argument("--threshold", type=float, default=0.1, help="Co-activation threshold (default: 0.1)")
     parser.add_argument("--n_clusters", type=int, default=10, help="Number of clusters (default: 10)")
     parser.add_argument("--max_features", type=int, default=None, help="Maximum number of features to analyze (default: all)")
+    parser.add_argument("--use_original_activations", action="store_true", help="Use original activations instead of SAE features")
     parser.add_argument("--output", default="data/coactivation_analysis", help="Output directory")
     
     args = parser.parse_args()
@@ -494,6 +504,9 @@ def main():
     # Set max features if specified
     if args.max_features is not None:
         analyzer.max_features = args.max_features
+    
+    # Set flag for using original activations
+    analyzer.use_original_activations = args.use_original_activations
     
     # Compute co-activation matrix
     analyzer.compute_coactivation_matrix(activations, output_dir=output_dir)
