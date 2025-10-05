@@ -87,7 +87,8 @@ class CoActivationAnalyzer:
                     features = features.view(features.size(0), -1)
                 features = features.cpu()
             else:
-                # Get SAE features for all activations
+                # Get SAE features for all activations (default behavior)
+                print("Using SAE features for co-activation analysis")
                 all_features = []
                 
                 for i in range(0, len(activations), batch_size):
@@ -115,29 +116,49 @@ class CoActivationAnalyzer:
             print(f"Features mean: {features.mean().item():.6f}")
             print(f"Non-zero features: {torch.count_nonzero(features).item()}")
             print(f"Features > 0: {torch.count_nonzero(features > 0).item()}")
+            print(f"Features > 0.01: {torch.count_nonzero(features > 0.01).item()}")
             print(f"Features > 0.1: {torch.count_nonzero(features > 0.1).item()}")
+            
+            # Debug: Check feature sparsity patterns
+            if hasattr(self, 'use_original_activations') and not self.use_original_activations:
+                print("=== SAE Feature Analysis ===")
+                # Count active features per sample
+                active_per_sample = torch.sum(features > 0.01, dim=1)
+                print(f"Active features per sample - min: {active_per_sample.min().item()}, max: {active_per_sample.max().item()}, mean: {active_per_sample.float().mean().item():.2f}")
+                
+                # Count samples per feature
+                active_per_feature = torch.sum(features > 0.01, dim=0)
+                print(f"Samples per feature - min: {active_per_feature.min().item()}, max: {active_per_feature.max().item()}, mean: {active_per_feature.float().mean().item():.2f}")
+                
+                # Find dead features (never active)
+                dead_features = torch.sum(active_per_feature == 0).item()
+                print(f"Dead features (never active): {dead_features}/{features.shape[1]} ({100*dead_features/features.shape[1]:.1f}%)")
+                
+                # Find always-active features
+                always_active = torch.sum(active_per_feature == features.shape[0]).item()
+                print(f"Always active features: {always_active}/{features.shape[1]} ({100*always_active/features.shape[1]:.1f}%)")
+            else:
+                print("=== Original Activation Analysis ===")
+                print(f"Input activations shape: {activations.shape}")
+                print(f"Input activations min: {activations.min().item():.6f}")
+                print(f"Input activations max: {activations.max().item():.6f}")
+                print(f"Input activations mean: {activations.mean().item():.6f}")
             
             # Debug: Check first few features in detail
             print(f"First 5 features, first 10 samples:")
             for i in range(5):
                 print(f"Feature {i}: {features[:10, i].tolist()}")
             
-            # Debug: Check if features are actually binary (0 or >0)
+            # Debug: Check unique values
             print(f"Unique values in first feature: {torch.unique(features[:, 0])[:10]}")
             
             # Debug: Check which samples have non-zero features
-            non_zero_samples = torch.any(features > 0, dim=1)
+            non_zero_samples = torch.any(features > 0.01, dim=1)
             print(f"Samples with non-zero features: {torch.sum(non_zero_samples).item()}/{features.shape[0]}")
             if torch.sum(non_zero_samples) > 0:
                 first_non_zero = torch.where(non_zero_samples)[0][0]
                 print(f"First non-zero sample: {first_non_zero}")
                 print(f"Features in sample {first_non_zero}: {features[first_non_zero, :10].tolist()}")
-            
-            # Debug: Check input activations
-            print(f"Input activations shape: {activations.shape}")
-            print(f"Input activations min: {activations.min().item():.6f}")
-            print(f"Input activations max: {activations.max().item():.6f}")
-            print(f"Input activations mean: {activations.mean().item():.6f}")
             
             # Compute co-activation matrix
             # P(feature_i | feature_j) = P(feature_i AND feature_j) / P(feature_j)
@@ -153,35 +174,54 @@ class CoActivationAnalyzer:
             for i in tqdm(range(num_features), desc="Computing co-activations"):
                 for j in range(num_features):
                     if i != j:
-                        # Use correlation instead of conditional probability
-                        # This works better with sparse SAE features
                         feature_i = features[:, i]
                         feature_j = features[:, j]
                         
-                        # Compute Pearson correlation
-                        # corr = E[(X-μX)(Y-μY)] / (σX * σY)
-                        mean_i = torch.mean(feature_i)
-                        mean_j = torch.mean(feature_j)
-                        
-                        # Avoid division by zero
-                        std_i = torch.std(feature_i)
-                        std_j = torch.std(feature_j)
-                        
-                        # Debug: Print some values to see what's happening
-                        if i < 3 and j < 3:  # Only for first few pairs
-                            print(f"Features {i},{j}: std_i={std_i:.6f}, std_j={std_j:.6f}")
-                        
-                        if std_i > 1e-8 and std_j > 1e-8:
-                            correlation = torch.mean((feature_i - mean_i) * (feature_j - mean_j)) / (std_i * std_j)
-                            coactivation_matrix[i, j] = correlation.item()
-                            # Debug: Print correlation for first few pairs
+                        # For SAE features, use Jaccard similarity (intersection over union)
+                        # This is more appropriate for sparse binary-like features
+                        if hasattr(self, 'use_original_activations') and not self.use_original_activations:
+                            # SAE features: use Jaccard similarity for sparse features
+                            # Convert to binary (active/non-active)
+                            active_i = (feature_i > 0.01).float()
+                            active_j = (feature_j > 0.01).float()
+                            
+                            # Jaccard similarity = |A ∩ B| / |A ∪ B|
+                            intersection = torch.sum(active_i * active_j).item()
+                            union = torch.sum(torch.max(active_i, active_j)).item()
+                            
+                            if union > 0:
+                                jaccard = intersection / union
+                                coactivation_matrix[i, j] = jaccard
+                            else:
+                                coactivation_matrix[i, j] = 0.0
+                                
+                            # Debug: Print some values for first few pairs
                             if i < 3 and j < 3:
-                                print(f"Features {i},{j}: corr={correlation.item():.6f}")
+                                print(f"SAE Features {i},{j}: jaccard={jaccard:.6f}, intersection={intersection}, union={union}")
                         else:
-                            # Set correlation to 0 for features with zero variance
-                            coactivation_matrix[i, j] = 0.0
-                            if i < 3 and j < 3:
-                                print(f"Features {i},{j}: corr=0.0 (zero variance)")
+                            # Original activations: use Pearson correlation
+                            mean_i = torch.mean(feature_i)
+                            mean_j = torch.mean(feature_j)
+                            
+                            # Avoid division by zero
+                            std_i = torch.std(feature_i)
+                            std_j = torch.std(feature_j)
+                            
+                            # Debug: Print some values to see what's happening
+                            if i < 3 and j < 3:  # Only for first few pairs
+                                print(f"Original Features {i},{j}: std_i={std_i:.6f}, std_j={std_j:.6f}")
+                            
+                            if std_i > 1e-8 and std_j > 1e-8:
+                                correlation = torch.mean((feature_i - mean_i) * (feature_j - mean_j)) / (std_i * std_j)
+                                coactivation_matrix[i, j] = correlation.item()
+                                # Debug: Print correlation for first few pairs
+                                if i < 3 and j < 3:
+                                    print(f"Original Features {i},{j}: corr={correlation.item():.6f}")
+                            else:
+                                # Set correlation to 0 for features with zero variance
+                                coactivation_matrix[i, j] = 0.0
+                                if i < 3 and j < 3:
+                                    print(f"Original Features {i},{j}: corr=0.0 (zero variance)")
             
             self.coactivation_matrix = coactivation_matrix
             
@@ -493,7 +533,7 @@ def main():
     parser.add_argument("--threshold", type=float, default=0.1, help="Co-activation threshold (default: 0.1)")
     parser.add_argument("--n_clusters", type=int, default=10, help="Number of clusters (default: 10)")
     parser.add_argument("--max_features", type=int, default=None, help="Maximum number of features to analyze (default: all)")
-    parser.add_argument("--use_original_activations", action="store_true", help="Use original activations instead of SAE features")
+    parser.add_argument("--use_original_activations", action="store_true", help="Use original activations instead of SAE features (default: use SAE features)")
     parser.add_argument("--output", default="data/coactivation_analysis", help="Output directory")
     
     args = parser.parse_args()
