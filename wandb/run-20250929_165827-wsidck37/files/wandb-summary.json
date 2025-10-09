@@ -1,0 +1,1 @@
+{"step":120000,"final_train_acc":1,"train_loss":6.581073193956399e-06,"_timestamp":1.7591919950596094e+09,"final_test_acc":0.984192348565356,"grokked":true,"train_acc":1,"_step":121,"best_test_acc":0.984192348565356,"test_loss":0.0530905423087254,"test_acc":0.984192348565356,"_wandb":{"runtime":1684},"_runtime":1684}

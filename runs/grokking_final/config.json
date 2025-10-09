@@ -1,0 +1,23 @@
+{
+  "p": 97,
+  "train_fraction": 0.2,
+  "d_model": 128,
+  "n_heads": 4,
+  "n_layers": 2,
+  "d_ff": 256,
+  "lr": 0.001,
+  "weight_decay": 0.1,
+  "batch_size": 1881,
+  "max_steps": 30000,
+  "no_shuffle": true,
+  "lr_decay_step": 0,
+  "lr_decay_factor": 0.1,
+  "eval_every": 1000,
+  "output_dir": "runs/grokking_final",
+  "seed": 42,
+  "wandb": true,
+  "auto_lr_decay": true,
+  "stop_after_grok": 10000,
+  "save_activations": true,
+  "activation_save_every": 1000
+}

@@ -1,0 +1,217 @@
+🔗 Initialized wandb logging
+
+============================================================
+Starting training...
+Weight decay: 0.1 (critical for grokking!)
+Train fraction: 0.2 (small is key!)
+============================================================
+
+Step      0 | Train:  1.12% | Test:  1.06%
+Training:  34%|████████████████                               | 41000/120000 [09:36<16:44, 78.67it/s, train=100.00%, test=83.01%]
+💾 Saved pre-grok checkpoint at step 5000
+💾 Saving activations for phase: pre_grok
+   Saved activations to activations/activations_pre_grok.pt
+Step  10000 | Train: 100.00% | Test:  4.85%
+Step  20000 | Train: 100.00% | Test: 17.95%
+
+🎯 GROKKING at step 22000! Test accuracy: 85.16%
+💾 Saved post-grok checkpoint at step 22000
+💾 Saving activations for phase: post_grok
+   Saved activations to activations/activations_post_grok.pt
+📉 Reduced learning rate to 1.0e-04 for stability
+Step  30000 | Train: 100.00% | Test: 77.80%
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+Step  40000 | Train: 100.00% | Test: 83.01%
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+Step  50000 | Train: 100.00% | Test: 74.42%
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+Step  60000 | Train: 100.00% | Test: 77.31%
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+Step  70000 | Train: 100.00% | Test: 82.19%
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+Step  80000 | Train: 100.00% | Test: 89.20%
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+Step  90000 | Train: 100.00% | Test: 91.17%
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+Step 100000 | Train: 100.00% | Test: 94.51%
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+Step 110000 | Train: 100.00% | Test: 97.10%
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+
+✋ Stopping 10000 steps after grokking
+Step 120000 | Train: 100.00% | Test: 98.42%
+
+✋ Stopping 10000 steps after grokking
+
+============================================================
+Training complete!
+Final Train Accuracy: 100.00%
+Final Test Accuracy: 98.42%
+Best Test Accuracy: 98.42%
+✅ Model successfully grokked!
+============================================================

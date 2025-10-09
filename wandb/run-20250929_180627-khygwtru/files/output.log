@@ -1,0 +1,116 @@
+🔗 Initialized wandb logging
+
+============================================================
+Starting training...
+Weight decay: 0.1 (critical for grokking!)
+Train fraction: 0.2 (small is key!)
+============================================================
+
+Step      0 | Train:  1.12% | Test:  1.06%
+Training:  33%|████████████████▎                                | 10000/30000 [02:22<04:35, 72.58it/s, train=100.00%, test=4.85%]
+💾 Saving activations for phase: step_01000
+   Saved activations to activations/activations_step_01000.pt
+💾 Saved checkpoint and activations at step 1000
+💾 Saving activations for phase: step_02000
+   Saved activations to activations/activations_step_02000.pt
+💾 Saved checkpoint and activations at step 2000
+💾 Saving activations for phase: step_03000
+   Saved activations to activations/activations_step_03000.pt
+💾 Saved checkpoint and activations at step 3000
+💾 Saving activations for phase: step_04000
+   Saved activations to activations/activations_step_04000.pt
+💾 Saved checkpoint and activations at step 4000
+💾 Saving activations for phase: step_05000
+   Saved activations to activations/activations_step_05000.pt
+💾 Saved checkpoint and activations at step 5000
+💾 Saved pre-grok checkpoint at step 5000
+💾 Saving activations for phase: step_06000
+   Saved activations to activations/activations_step_06000.pt
+💾 Saved checkpoint and activations at step 6000
+💾 Saving activations for phase: step_07000
+   Saved activations to activations/activations_step_07000.pt
+💾 Saved checkpoint and activations at step 7000
+💾 Saving activations for phase: step_08000
+   Saved activations to activations/activations_step_08000.pt
+💾 Saved checkpoint and activations at step 8000
+💾 Saving activations for phase: step_09000
+   Saved activations to activations/activations_step_09000.pt
+💾 Saved checkpoint and activations at step 9000
+💾 Saving activations for phase: step_10000
+   Saved activations to activations/activations_step_10000.pt
+💾 Saved checkpoint and activations at step 10000
+Step  10000 | Train: 100.00% | Test:  4.85%
+💾 Saving activations for phase: step_11000
+   Saved activations to activations/activations_step_11000.pt
+💾 Saved checkpoint and activations at step 11000
+💾 Saving activations for phase: step_12000
+   Saved activations to activations/activations_step_12000.pt
+💾 Saved checkpoint and activations at step 12000
+💾 Saving activations for phase: step_13000
+   Saved activations to activations/activations_step_13000.pt
+💾 Saved checkpoint and activations at step 13000
+💾 Saving activations for phase: step_14000
+   Saved activations to activations/activations_step_14000.pt
+💾 Saved checkpoint and activations at step 14000
+💾 Saving activations for phase: step_15000
+   Saved activations to activations/activations_step_15000.pt
+💾 Saved checkpoint and activations at step 15000
+💾 Saving activations for phase: step_16000
+   Saved activations to activations/activations_step_16000.pt
+💾 Saved checkpoint and activations at step 16000
+💾 Saving activations for phase: step_17000
+   Saved activations to activations/activations_step_17000.pt
+💾 Saved checkpoint and activations at step 17000
+💾 Saving activations for phase: step_18000
+   Saved activations to activations/activations_step_18000.pt
+💾 Saved checkpoint and activations at step 18000
+💾 Saving activations for phase: step_19000
+   Saved activations to activations/activations_step_19000.pt
+💾 Saved checkpoint and activations at step 19000
+💾 Saving activations for phase: step_20000
+   Saved activations to activations/activations_step_20000.pt
+💾 Saved checkpoint and activations at step 20000
+Step  20000 | Train: 100.00% | Test: 17.95%
+💾 Saving activations for phase: step_21000
+   Saved activations to activations/activations_step_21000.pt
+💾 Saved checkpoint and activations at step 21000
+💾 Saving activations for phase: step_22000
+   Saved activations to activations/activations_step_22000.pt
+💾 Saved checkpoint and activations at step 22000
+
+🎯 GROKKING at step 22000! Test accuracy: 85.16%
+💾 Saved post-grok checkpoint at step 22000
+📉 Reduced learning rate to 1.0e-04 for stability
+💾 Saving activations for phase: step_23000
+   Saved activations to activations/activations_step_23000.pt
+💾 Saved checkpoint and activations at step 23000
+💾 Saving activations for phase: step_24000
+   Saved activations to activations/activations_step_24000.pt
+💾 Saved checkpoint and activations at step 24000
+💾 Saving activations for phase: step_25000
+   Saved activations to activations/activations_step_25000.pt
+💾 Saved checkpoint and activations at step 25000
+💾 Saving activations for phase: step_26000
+   Saved activations to activations/activations_step_26000.pt
+💾 Saved checkpoint and activations at step 26000
+💾 Saving activations for phase: step_27000
+   Saved activations to activations/activations_step_27000.pt
+💾 Saved checkpoint and activations at step 27000
+💾 Saving activations for phase: step_28000
+   Saved activations to activations/activations_step_28000.pt
+💾 Saved checkpoint and activations at step 28000
+💾 Saving activations for phase: step_29000
+   Saved activations to activations/activations_step_29000.pt
+💾 Saved checkpoint and activations at step 29000
+💾 Saving activations for phase: step_30000
+   Saved activations to activations/activations_step_30000.pt
+💾 Saved checkpoint and activations at step 30000
+Step  30000 | Train: 100.00% | Test: 77.80%
+
+============================================================
+Training complete!
+Final Train Accuracy: 100.00%
+Final Test Accuracy: 77.80%
+Best Test Accuracy: 85.16%
+✅ Model successfully grokked!
+============================================================

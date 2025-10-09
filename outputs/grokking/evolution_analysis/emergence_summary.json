@@ -1,0 +1,23 @@
+{
+  "num_checkpoints": 30,
+  "emergence_points": [
+    21
+  ],
+  "emergence_checkpoints": [
+    "checkpoint_step_22000"
+  ],
+  "precursors": [
+    {
+      "checkpoint_idx": 21,
+      "checkpoint_name": "checkpoint_step_22000",
+      "density_trend": 0.006447112382103525,
+      "density_change": -0.11869827539316705,
+      "avg_clustering_trend": 0.0020318001505804846,
+      "avg_clustering_change": -0.04621816250942475,
+      "modularity_trend": 0.0,
+      "modularity_change": 0,
+      "largest_component_size_trend": -9.100000000000023,
+      "largest_component_size_change": 0.06060606060606061
+    }
+  ]
+}
