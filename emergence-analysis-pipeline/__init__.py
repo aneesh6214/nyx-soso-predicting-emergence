@@ -9,7 +9,7 @@ Supports:
 - Pythia language models  
 - Custom PyTorch models
 
-Main entry point: run_analysis.py
+Main entry point: cli/run_analysis.py
 """
 
 __version__ = "0.1.0"

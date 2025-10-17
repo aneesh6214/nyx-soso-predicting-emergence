@@ -18,7 +18,7 @@
   },
   "graph_config": {
     "activation_threshold": 0.01,
-    "edge_threshold": 0.3,
+    "edge_threshold": 0.05,
     "min_degree": 1,
     "n_clusters": 10,
     "clustering_method": "spectral",
@@ -33,10 +33,14 @@
     "sae_features": 256,
     "sae_sparsity": 0.01,
     "sae_epochs": 100,
-    "edge_threshold": 0.3,
+    "edge_threshold": 0.05,
     "n_clusters": 10,
     "track_evolution": true,
     "predict_emergence": true,
+    "jump_threshold": 0.2,
+    "stability_tol": 0.02,
+    "stability_horizon": 3,
+    "require_full_horizon": false,
     "output": "outputs"
   }
 }

@@ -10,14 +10,14 @@
     {
       "checkpoint_idx": 21,
       "checkpoint_name": "checkpoint_step_22000",
-      "density_trend": 0.006447112382103525,
-      "density_change": -0.11869827539316705,
-      "avg_clustering_trend": 0.0020318001505804846,
-      "avg_clustering_change": -0.04621816250942475,
-      "modularity_trend": 0.0,
-      "modularity_change": 0,
-      "largest_component_size_trend": -9.100000000000023,
-      "largest_component_size_change": 0.06060606060606061
+      "density_trend": -0.01497846746538402,
+      "density_change": -0.021044626416709206,
+      "avg_clustering_trend": -0.007751513992080599,
+      "avg_clustering_change": -0.015172646677908084,
+      "modularity_trend": -0.00032560777936340286,
+      "modularity_change": -1.0,
+      "largest_component_size_trend": -0.7000000000000315,
+      "largest_component_size_change": -0.00390625
     }
   ]
 }

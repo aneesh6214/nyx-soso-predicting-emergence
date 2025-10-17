@@ -25,7 +25,7 @@ emergence-analysis-pipeline/
 │   ├── grokking_adapter.py # For grokking experiments
 │   ├── pythia_adapter.py   # For Pythia LMs
 │   └── generic_adapter.py  # For custom models
-└── run_analysis.py    # Main entry point
+└── cli/run_analysis.py    # Main entry point
 ```
 
 ## Quick Start
@@ -34,7 +34,7 @@ emergence-analysis-pipeline/
 
 ```bash
 # Analyze pre/post grokking checkpoints
-python run_analysis.py \
+python cli/run_analysis.py \
     --experiment grokking \
     --checkpoint_dir runs/grokking_final \
     --sae_features 512 \
@@ -46,7 +46,7 @@ python run_analysis.py \
 
 ```bash
 # Analyze Pythia model layers
-python run_analysis.py \
+python cli/run_analysis.py \
     --experiment pythia \
     --model pythia-410m-deduped \
     --layer 6 \
@@ -57,7 +57,7 @@ python run_analysis.py \
 
 ```bash
 # Analyze any PyTorch checkpoints
-python run_analysis.py \
+python cli/run_analysis.py \
     --experiment custom \
     --checkpoints model_step_*.pt \
     --track_evolution
@@ -107,7 +107,7 @@ python emergence-analysis-pipeline/test_pipeline.py
    - `get_checkpoint_info()` - Extract metadata
    - `get_emergence_metric()` - Define emergence metric
 
-3. Register in run_analysis.py's `load_adapter()` function
+3. Register in `cli/run_analysis.py`'s `load_adapter()` function
 
 ## Requirements
 

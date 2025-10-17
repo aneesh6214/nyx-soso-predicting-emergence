@@ -74,4 +74,4 @@ def create_detailed_checkpoints():
 if __name__ == "__main__":
     checkpoint_dir = create_detailed_checkpoints()
     print(f"\nNow run detailed analysis:")
-    print(f"python emergence-analysis-pipeline/run_analysis.py --experiment grokking --checkpoint_dir {checkpoint_dir} --sae_features 256 --track_evolution --predict_emergence")
+    print(f"python emergence-analysis-pipeline/cli/run_analysis.py --experiment grokking --checkpoint_dir {checkpoint_dir} --sae_features 256 --track_evolution --predict_emergence")

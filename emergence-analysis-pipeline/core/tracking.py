@@ -10,6 +10,7 @@ import json
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+from .emergence_detection import detect_emergence as _detect_emergence
 
 class EmergenceTracker:
     """Track graph evolution and detect emergence signatures."""
@@ -36,39 +37,35 @@ class EmergenceTracker:
     
     def detect_emergence(
         self,
-        threshold: float = 0.8,
-        min_jump: float = 0.5,
-        window: int = 3
+        jump_threshold: float = 0.20,
+        stability_tol: float = 0.02,
+        stability_horizon: int = 3,
+        require_full_horizon: bool = True,
     ) -> List[int]:
         """
-        Detect emergence points based on metric jumps.
-        
-        Args:
-            threshold: Minimum emergence_metric to consider "emerged"
-            min_jump: Minimum increase in emergence_metric to flag
-            window: Window size for computing jumps
+        Detect emergence points using the formal detector based on a big accuracy
+        jump followed by stability over the next H evaluations.
         
         Returns:
-            List of checkpoint indices where emergence detected
+            List of checkpoint indices where emergence is detected.
         """
-        if len(self.checkpoint_metrics) < window:
+        if len(self.checkpoint_metrics) < 2:
             return []
-        
-        emergence_points = []
-        
-        for i in range(window, len(self.checkpoint_metrics)):
-            current = self.checkpoint_metrics[i]['test_acc']
-            prev_avg = np.mean([
-                self.checkpoint_metrics[j]['test_acc'] 
-                for j in range(i-window, i)
-            ])
-            
-            # Check for sudden jump
-            if current > threshold and (current - prev_avg) > min_jump:
-                emergence_points.append(i)
-        
-        self.emergence_points = emergence_points
-        return emergence_points
+
+        steps = [m['step'] for m in self.checkpoint_metrics]
+        acc = [m.get('test_acc', 0.0) for m in self.checkpoint_metrics]
+
+        _, idx = _detect_emergence(
+            steps,
+            acc,
+            jump_threshold=jump_threshold,
+            stability_tol=stability_tol,
+            stability_horizon=stability_horizon,
+            require_full_horizon=require_full_horizon,
+        )
+
+        self.emergence_points = idx
+        return idx
     
     def find_precursors(
         self,

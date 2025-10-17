@@ -13,8 +13,8 @@ import json
 import sys
 import os
 
-# Add parent directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+# Ensure local package imports work when run as a script from repo root
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from core.sae import SparseAutoencoder, SAETrainer
 from core.coactivation import CoActivationAnalyzer
@@ -94,7 +94,7 @@ def analyze_checkpoint(
         num_epochs=sae_config.get('num_epochs', 100),
         batch_size=sae_config.get('batch_size', 256),
         verbose=sae_config.get('verbose', False),
-        seed=42  # Fixed seed for reproducible SAE training
+        seed=42
     )
     
     # Save SAE model
@@ -106,25 +106,26 @@ def analyze_checkpoint(
     analyzer = CoActivationAnalyzer(sae_model)
     
     # Compute co-activation matrix
-    coact_matrix = analyzer.compute_coactivation_matrix(
+    analyzer.compute_coactivation_matrix(
         activations,
         threshold=graph_config.get('activation_threshold', 0.01),
         normalize=graph_config.get('normalize', True)
     )
     
     # Build graph
-    graph = analyzer.build_coactivation_graph(
+    analyzer.build_coactivation_graph(
         edge_threshold=graph_config.get('edge_threshold', 0.1),
         min_degree=graph_config.get('min_degree', 1)
     )
     
     # Cluster features
+    graph = analyzer.graph
     if graph.number_of_nodes() > 0:
-        clusters = analyzer.cluster_features(
+        analyzer.cluster_features(
             n_clusters=min(graph_config.get('n_clusters', 10), graph.number_of_nodes()),
             method=graph_config.get('clustering_method', 'spectral')
         )
-        print(f"   Found {len(clusters)} feature clusters")
+        print(f"   Found {graph.number_of_nodes()} nodes in graph")
     
     # Compute graph metrics
     metrics = analyzer.compute_graph_metrics()
@@ -177,28 +178,26 @@ def main():
     parser.add_argument("--layer", help="Layer/position to analyze (e.g., position_0, position_1, position_2)")
     
     # SAE configuration
-    parser.add_argument("--sae_features", type=int, default=512, 
-                       help="Number of SAE features")
-    parser.add_argument("--sae_sparsity", type=float, default=0.01,
-                       help="SAE sparsity penalty")
-    parser.add_argument("--sae_epochs", type=int, default=100,
-                       help="SAE training epochs")
+    parser.add_argument("--sae_features", type=int, default=512, help="Number of SAE features")
+    parser.add_argument("--sae_sparsity", type=float, default=0.01, help="SAE sparsity penalty")
+    parser.add_argument("--sae_epochs", type=int, default=100, help="SAE training epochs")
     
     # Graph configuration
-    parser.add_argument("--edge_threshold", type=float, default=0.1,
-                       help="Minimum co-activation for edges")
-    parser.add_argument("--n_clusters", type=int, default=10,
-                       help="Number of feature clusters")
+    parser.add_argument("--edge_threshold", type=float, default=0.1, help="Minimum co-activation for edges")
+    parser.add_argument("--n_clusters", type=int, default=10, help="Number of feature clusters")
     
     # Analysis options
-    parser.add_argument("--track_evolution", action="store_true",
-                       help="Track evolution across checkpoints")
-    parser.add_argument("--predict_emergence", action="store_true",
-                       help="Predict emergence points")
+    parser.add_argument("--track_evolution", action="store_true", help="Track evolution across checkpoints")
+    parser.add_argument("--predict_emergence", action="store_true", help="Predict emergence points")
+    
+    # Emergence detector parameters
+    parser.add_argument("--jump_threshold", type=float, default=0.20, help="Min test_acc jump to flag emergence")
+    parser.add_argument("--stability_tol", type=float, default=0.02, help="Tolerance for post-jump stability plateau")
+    parser.add_argument("--stability_horizon", type=int, default=3, help="Number of future evals that must be stable")
+    parser.add_argument("--require_full_horizon", action="store_true", help="Require full horizon to exist for detection")
     
     # Output
-    parser.add_argument("--output", default="outputs",
-                       help="Output directory")
+    parser.add_argument("--output", default="outputs", help="Output directory")
     
     args = parser.parse_args()
     
@@ -218,7 +217,7 @@ def main():
         'hidden_dim': args.sae_features,
         'sparsity_penalty': args.sae_sparsity,
         'num_epochs': args.sae_epochs,
-        'layer_name': args.layer,  # Use layer argument directly
+        'layer_name': args.layer,
         'num_samples': 1000,
         'batch_size': 256,
         'learning_rate': 1e-3,
@@ -248,20 +247,16 @@ def main():
     adapter = load_adapter(args.experiment, config)
     
     # Find checkpoints to analyze
-    checkpoint_paths = []
+    checkpoint_paths: List[Path] = []
     
     if args.checkpoints:
-        # Explicit checkpoint list
         checkpoint_paths = [Path(p) for p in args.checkpoints]
     elif args.checkpoint_dir:
-        # Directory of checkpoints
         ckpt_dir = Path(args.checkpoint_dir)
         if args.experiment == "grokking":
-            # Look for pre/post grok checkpoints
             for pattern in ['checkpoint_pre_grok.pt', 'checkpoint_post_grok.pt', 'checkpoint_*.pt']:
                 checkpoint_paths.extend(sorted(ckpt_dir.glob(pattern)))
         else:
-            # General checkpoint pattern
             checkpoint_paths = sorted(ckpt_dir.glob('*.pt'))
     else:
         print("ERROR: Must specify either --checkpoint_dir or --checkpoints")
@@ -280,7 +275,6 @@ def main():
     tracker = EmergenceTracker()
     
     # Analyze each checkpoint
-    all_metrics = []
     for checkpoint_name, checkpoint in checkpoints.items():
         metrics = analyze_checkpoint(
             checkpoint=checkpoint,
@@ -290,8 +284,6 @@ def main():
             graph_config=graph_config,
             output_dir=output_dir
         )
-        
-        all_metrics.append(metrics)
         
         # Add to tracker
         tracker.add_checkpoint(
@@ -312,7 +304,12 @@ def main():
         
         # Detect emergence points
         if args.predict_emergence:
-            emergence_points = tracker.detect_emergence()
+            emergence_points = tracker.detect_emergence(
+                jump_threshold=args.jump_threshold,
+                stability_tol=args.stability_tol,
+                stability_horizon=args.stability_horizon,
+                require_full_horizon=args.require_full_horizon,
+            )
             if emergence_points:
                 print(f"\n[FOUND] Detected emergence at checkpoints: {emergence_points}")
                 for idx in emergence_points:
@@ -329,3 +326,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
