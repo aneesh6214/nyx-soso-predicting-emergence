@@ -112,7 +112,8 @@ class CoActivationAnalyzer:
     def cluster_features(
         self,
         n_clusters: int = 10,
-        method: str = "spectral"
+        method: str = "spectral",
+        random_state: int = 42
     ) -> Dict[int, List[int]]:
         """
         Cluster features based on co-activation patterns.
@@ -131,7 +132,7 @@ class CoActivationAnalyzer:
             clustering = SpectralClustering(
                 n_clusters=n_clusters,
                 affinity='precomputed',
-                random_state=42
+                random_state=random_state
             )
             labels = clustering.fit_predict(adjacency)
         else:

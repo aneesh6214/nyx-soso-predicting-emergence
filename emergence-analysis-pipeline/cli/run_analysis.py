@@ -94,7 +94,7 @@ def analyze_checkpoint(
         num_epochs=sae_config.get('num_epochs', 100),
         batch_size=sae_config.get('batch_size', 256),
         verbose=sae_config.get('verbose', False),
-        seed=42
+        seed=sae_config.get('seed', 42)
     )
     
     # Save SAE model
@@ -123,7 +123,8 @@ def analyze_checkpoint(
     if graph.number_of_nodes() > 0:
         analyzer.cluster_features(
             n_clusters=min(graph_config.get('n_clusters', 10), graph.number_of_nodes()),
-            method=graph_config.get('clustering_method', 'spectral')
+            method=graph_config.get('clustering_method', 'spectral'),
+            random_state=sae_config.get('seed', 42)
         )
         print(f"   Found {graph.number_of_nodes()} nodes in graph")
     
@@ -181,6 +182,7 @@ def main():
     parser.add_argument("--sae_features", type=int, default=512, help="Number of SAE features")
     parser.add_argument("--sae_sparsity", type=float, default=0.01, help="SAE sparsity penalty")
     parser.add_argument("--sae_epochs", type=int, default=100, help="SAE training epochs")
+    parser.add_argument("--sae_seed", type=int, default=42, help="Random seed for SAE training and clustering")
     
     # Graph configuration
     parser.add_argument("--edge_threshold", type=float, default=0.1, help="Minimum co-activation for edges")
@@ -189,6 +191,7 @@ def main():
     # Analysis options
     parser.add_argument("--track_evolution", action="store_true", help="Track evolution across checkpoints")
     parser.add_argument("--predict_emergence", action="store_true", help="Predict emergence points")
+    parser.add_argument("--no_experiment_dir", action="store_true", help="Use output path exactly; do not append experiment subdir")
     
     # Emergence detector parameters
     parser.add_argument("--jump_threshold", type=float, default=0.20, help="Min test_acc jump to flag emergence")
@@ -202,7 +205,8 @@ def main():
     args = parser.parse_args()
     
     # Set up output directory
-    output_dir = Path(args.output) / args.experiment
+    base_output = Path(args.output)
+    output_dir = base_output if args.no_experiment_dir else (base_output / args.experiment)
     output_dir.mkdir(parents=True, exist_ok=True)
     
     # Create configuration
@@ -222,7 +226,8 @@ def main():
         'batch_size': 256,
         'learning_rate': 1e-3,
         'tied_weights': False,
-        'verbose': False
+        'verbose': False,
+        'seed': args.sae_seed,
     }
     
     graph_config = {

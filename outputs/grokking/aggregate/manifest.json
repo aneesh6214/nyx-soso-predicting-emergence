@@ -1,0 +1,38 @@
+{
+  "seeds": [
+    "seed000",
+    "seed001",
+    "seed002",
+    "seed003",
+    "seed004",
+    "seed005",
+    "seed006",
+    "seed007"
+  ],
+  "metrics": [
+    "avg_clustering",
+    "avg_clustering_delta",
+    "avg_clustering_rel_change",
+    "avg_clustering_rolling_avg",
+    "avg_degree",
+    "density",
+    "density_delta",
+    "density_rel_change",
+    "density_rolling_avg",
+    "largest_component_size",
+    "largest_component_size_delta",
+    "largest_component_size_rel_change",
+    "max_degree",
+    "modularity",
+    "num_components",
+    "num_edges",
+    "num_edges_delta",
+    "num_edges_rel_change",
+    "num_nodes",
+    "sae_sparsity",
+    "test_acc",
+    "test_acc_rolling_avg",
+    "train_acc",
+    "val_acc"
+  ]
+}

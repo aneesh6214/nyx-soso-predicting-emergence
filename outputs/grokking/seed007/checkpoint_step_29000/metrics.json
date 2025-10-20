@@ -1,0 +1,11 @@
+{
+  "num_nodes": 254,
+  "num_edges": 29694,
+  "density": 0.9241542435654041,
+  "avg_degree": 233.81102362204723,
+  "max_degree": 251,
+  "num_components": 1,
+  "largest_component_size": 254,
+  "avg_clustering": 0.9559165496085201,
+  "modularity": 0
+}

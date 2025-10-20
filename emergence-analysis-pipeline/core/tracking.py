@@ -216,6 +216,129 @@ class EmergenceTracker:
             plt.close()
         else:
             plt.show()
+
+    @staticmethod
+    def aggregate_seed_metrics(seed_metric_dfs: Dict[str, pd.DataFrame],
+                               value_cols: Optional[List[str]] = None,
+                               step_col: str = 'step') -> Dict[str, pd.DataFrame]:
+        """
+        Aggregate multiple seed DataFrames by step, computing mean and std and 95% CI.
+        Returns dict with 'mean', 'std', 'ci95', and 'long' (stacked) DataFrames.
+        """
+        # Align on step via outer join, suffix by seed
+        # Determine default value columns if not provided
+        if value_cols is None:
+            # Union of numeric columns across seeds, excluding identifiers
+            numeric_cols = set()
+            for df in seed_metric_dfs.values():
+                for col in df.columns:
+                    if col != step_col and pd.api.types.is_numeric_dtype(df[col]):
+                        numeric_cols.add(col)
+            value_cols = sorted(numeric_cols)
+
+        # Build long-format table: [seed, step, metric, value]
+        long_rows = []
+        for seed, df in seed_metric_dfs.items():
+            for col in value_cols:
+                if col in df.columns:
+                    tmp = df[[step_col, col]].copy()
+                    tmp['metric'] = col
+                    tmp['seed'] = seed
+                    tmp.rename(columns={col: 'value'}, inplace=True)
+                    long_rows.append(tmp)
+        if not long_rows:
+            return {'mean': pd.DataFrame(), 'std': pd.DataFrame(), 'ci95': pd.DataFrame(), 'long': pd.DataFrame()}
+
+        long_df = pd.concat(long_rows, ignore_index=True)
+
+        # Group by step and metric
+        grouped = long_df.groupby([step_col, 'metric'])['value']
+        mean_df = grouped.mean().unstack('metric').reset_index()
+        std_df = grouped.std(ddof=1).unstack('metric').reset_index()
+        count_df = grouped.count().unstack('metric').reset_index()
+
+        # 95% CI using normal approximation: 1.96 * std/sqrt(n)
+        ci95_df = std_df.copy()
+        for col in value_cols:
+            if col in std_df.columns and col in count_df.columns:
+                n = count_df[col].replace(0, np.nan)
+                ci95_df[col] = 1.96 * std_df[col] / np.sqrt(n)
+
+        return {'mean': mean_df, 'std': std_df, 'ci95': ci95_df, 'long': long_df}
+
+    @staticmethod
+    def plot_aggregate(mean_df: pd.DataFrame,
+                       ci95_df: pd.DataFrame,
+                       metrics: Optional[List[str]] = None,
+                       step_col: str = 'step',
+                       save_path: Optional[Path] = None,
+                       figsize: Tuple[int, int] = (14, 10),
+                       spaghetti_df: Optional[pd.DataFrame] = None,
+                       emergence_step: Optional[int] = None,
+                       emergence_steps: Optional[List[int]] = None):
+        """
+        Plot mean with 95% CI ribbon for the given metrics.
+        Optionally draw a dashed vertical line at the emergence step.
+        """
+        if mean_df.empty:
+            return
+        if metrics is None:
+            # Default to the same metrics as single-seed evolution plots
+            default_order = [
+                'test_acc',
+                'density',
+                'avg_clustering',
+                'num_edges',
+                'largest_component_size',
+                'modularity'
+            ]
+            metrics = [m for m in default_order if m in mean_df.columns]
+            if not metrics:
+                metrics = [c for c in mean_df.columns if c != step_col]
+
+        # Create subplots up to 6
+        n_metrics = min(len(metrics), 6)
+        fig, axes = plt.subplots((n_metrics + 1) // 2, 2, figsize=figsize, sharex=True)
+        axes = axes.flatten() if n_metrics > 1 else [axes]
+
+        for idx, metric in enumerate(metrics[:n_metrics]):
+            ax = axes[idx]
+            x = mean_df[step_col]
+            y = mean_df[metric]
+            ci = ci95_df[metric] if metric in ci95_df.columns else None
+            # Spaghetti lines per seed (faint)
+            if spaghetti_df is not None:
+                dfm = spaghetti_df[spaghetti_df['metric'] == metric]
+                for seed, sdf in dfm.groupby('seed'):
+                    ax.plot(sdf[step_col], sdf['value'], color='C0', alpha=0.15, linewidth=1)
+            ax.plot(x, y, color='C0', label=f'{metric} (mean)', linewidth=2)
+            if ci is not None:
+                ax.fill_between(x, y - ci, y + ci, color='C0', alpha=0.2, label='95% CI' if idx == 0 else None)
+            # Draw emergence line (single aggregated step)
+            line_x = None
+            if emergence_step is not None:
+                line_x = emergence_step
+            elif emergence_steps:
+                # Use median across seeds
+                median_step = int(np.median(emergence_steps))
+                # Snap to nearest available step in x
+                line_x = min(x, key=lambda v: abs(v - median_step)) if len(x) > 0 else median_step
+            if line_x is not None:
+                ax.axvline(line_x, color='red', linestyle='--', alpha=0.6, label='Emergence' if idx == 0 else None)
+            ax.set_title(metric)
+            ax.grid(True, alpha=0.3)
+            if idx == 0:
+                ax.legend()
+
+        for ax in axes[-2:]:
+            ax.set_xlabel('Training Step')
+        plt.suptitle('Across-seed Mean ± 95% CI')
+        plt.tight_layout()
+        if save_path:
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
+            plt.close()
+        else:
+            plt.show()
     
     def generate_report(self, output_dir: Path):
         """Generate emergence analysis report."""
