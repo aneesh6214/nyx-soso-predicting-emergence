@@ -87,6 +87,24 @@ def main():
         emergence_steps=seed_emergence_steps
     )
 
+    # Lead–Lag correlation across seeds
+    if args.metrics:
+        metric_list = args.metrics
+    else:
+        # Use the five plotted graph metrics (exclude test_acc)
+        preferred = ['density', 'avg_clustering', 'num_edges', 'largest_component_size', 'sae_sparsity']
+        available = [m for m in preferred if m in agg['mean'].columns]
+        # Fallback: any non-step, non-accuracy base metrics
+        metric_list = available if available else [
+            c for c in agg['mean'].columns
+            if c not in ('step', 'test_acc')
+        ]
+    # Exclude derived columns if present
+    metric_list = [m for m in metric_list if not (m.endswith('_delta') or m.endswith('_rel_change') or m.endswith('_rolling_avg'))]
+    lead_lag_df = EmergenceTracker.compute_lead_lag(seed_to_df, metrics=metric_list)
+    lead_lag_df.to_csv(out_dir / 'lead_lag_results.csv', index=False)
+    EmergenceTracker.plot_lead_lag_heatmap(lead_lag_df, save_path=out_dir / 'lead_lag_heatmap.png')
+
     # Save manifest
     with open(out_dir / 'manifest.json', 'w') as f:
         json.dump({

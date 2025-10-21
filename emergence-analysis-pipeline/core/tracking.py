@@ -216,6 +216,116 @@ class EmergenceTracker:
             plt.close()
         else:
             plt.show()
+    
+    @staticmethod
+    def compute_lead_lag(
+        seed_metric_dfs: Dict[str, pd.DataFrame],
+        metrics: List[str],
+        step_col: str = 'step',
+        acc_col: str = 'test_acc',
+        lags: List[int] = [1, 2, 3, 4, 5]
+    ) -> pd.DataFrame:
+        """
+        Compute across-seed lead–lag correlations between delta(metric) and delta(acc).
+        Returns a long DataFrame with columns: metric, lag, r_mean, ci_low, ci_high, n_seeds.
+        Uses Fisher z-transform to average correlations and compute 95% CI across seeds.
+        """
+        # Collect per-seed correlation arrays for each metric
+        metric_to_seed_r: Dict[str, List[np.ndarray]] = {m: [] for m in metrics}
+        for _seed, df in seed_metric_dfs.items():
+            if acc_col not in df.columns or step_col not in df.columns:
+                continue
+            df_sorted = df.sort_values(step_col).reset_index(drop=True)
+            # First differences over full timeline (np.diff avoids leading NaN)
+            delta_acc = np.diff(df_sorted[acc_col].to_numpy(dtype=float))
+            for metric in metrics:
+                if metric not in df_sorted.columns:
+                    continue
+                delta_m = np.diff(df_sorted[metric].to_numpy(dtype=float))
+                r_vals: List[float] = []
+                for k in lags:
+                    if len(delta_m) <= k or len(delta_acc) <= k:
+                        r_vals.append(np.nan)
+                        continue
+                    a = delta_m[:-k]
+                    b = delta_acc[k:]
+                    # Check finite and non-constant
+                    if (np.all(np.isfinite(a)) and np.all(np.isfinite(b)) and
+                        np.std(a) > 0 and np.std(b) > 0):
+                        # Pearson r via numpy
+                        r = np.corrcoef(a, b)[0, 1]
+                        r_vals.append(float(r))
+                    else:
+                        r_vals.append(np.nan)
+                metric_to_seed_r[metric].append(np.array(r_vals, dtype=float))
+        
+        # Aggregate with Fisher z-transform and compute 95% CI across seeds
+        rows: List[Dict[str, float]] = []
+        for metric in metrics:
+            seed_arrays = [arr for arr in metric_to_seed_r.get(metric, []) if arr.size > 0]
+            if not seed_arrays:
+                continue
+            R = np.vstack(seed_arrays)  # shape: (n_seeds, n_lags)
+            r_mean_list: List[float] = []
+            ci_low_list: List[float] = []
+            ci_high_list: List[float] = []
+            n_used_list: List[int] = []
+            for j in range(R.shape[1]):
+                rj = R[:, j]
+                mask = np.isfinite(rj)
+                rj = rj[mask]
+                n = int(mask.sum())
+                if n == 0:
+                    r_mean_list.append(np.nan)
+                    ci_low_list.append(np.nan)
+                    ci_high_list.append(np.nan)
+                    n_used_list.append(0)
+                    continue
+                # Clip r to avoid infinite atanh
+                rj = np.clip(rj, -0.999999, 0.999999)
+                z = np.arctanh(rj)
+                z_mean = float(np.mean(z))
+                r_bar = float(np.tanh(z_mean))
+                if n > 1:
+                    z_se = float(np.std(z, ddof=1)) / np.sqrt(n)
+                    z_lo = z_mean - 1.96 * z_se
+                    z_hi = z_mean + 1.96 * z_se
+                    lo = float(np.tanh(z_lo))
+                    hi = float(np.tanh(z_hi))
+                else:
+                    lo = np.nan
+                    hi = np.nan
+                r_mean_list.append(r_bar)
+                ci_low_list.append(lo)
+                ci_high_list.append(hi)
+                n_used_list.append(n)
+            for lag, rm, lo, hi, n in zip(lags, r_mean_list, ci_low_list, ci_high_list, n_used_list):
+                rows.append({'metric': metric, 'lag': lag, 'r_mean': rm, 'ci_low': lo, 'ci_high': hi, 'n_seeds': n})
+        return pd.DataFrame(rows)
+    
+    @staticmethod
+    def plot_lead_lag_heatmap(
+        df: pd.DataFrame,
+        save_path: Optional[Path] = None,
+        figsize: Tuple[int, int] = (10, 6)
+    ):
+        """
+        Plot heatmap of mean correlations (rows: metric, cols: lag). Values centered at 0 with annotations.
+        """
+        if df.empty:
+            return
+        pivot = df.pivot(index='metric', columns='lag', values='r_mean')
+        plt.figure(figsize=figsize)
+        ax = sns.heatmap(pivot, vmin=-1.0, vmax=1.0, center=0.0, cmap='RdBu_r', annot=True, fmt='.2f')
+        ax.set_title('Lead–Lag correlation: Δmetric vs Δaccuracy (mean across seeds)')
+        ax.set_xlabel('Lag (eval steps)')
+        ax.set_ylabel('Metric')
+        plt.tight_layout()
+        if save_path:
+            plt.savefig(save_path, dpi=150, bbox_inches='tight')
+            plt.close()
+        else:
+            plt.show()
 
     @staticmethod
     def aggregate_seed_metrics(seed_metric_dfs: Dict[str, pd.DataFrame],
@@ -283,14 +393,14 @@ class EmergenceTracker:
         if mean_df.empty:
             return
         if metrics is None:
-            # Default to the same metrics as single-seed evolution plots
+            # Default to the same metrics as single-seed evolution plots, but use sparsity instead of modularity
             default_order = [
                 'test_acc',
                 'density',
                 'avg_clustering',
                 'num_edges',
                 'largest_component_size',
-                'modularity'
+                'sae_sparsity'
             ]
             metrics = [m for m in default_order if m in mean_df.columns]
             if not metrics:
